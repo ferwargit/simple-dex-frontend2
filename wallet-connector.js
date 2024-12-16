@@ -117,7 +117,10 @@ class WalletConnector {
                 this.headerElement.style.display = 'none';
                 this.footerElement.style.display = 'none';
                 this.networkElement.style.display = 'block';
+                
+                // Mostrar "Wallet conectada" con fondo gris
                 this.connectionStatusElement.innerText = 'Wallet conectada';
+                this.connectionStatusElement.style.display = 'block';
                 
                 // Configuración específica para estado conectado
                 this.statusElement.style.display = 'block';
@@ -125,9 +128,6 @@ class WalletConnector {
                 this.statusElement.innerText = this.signer && this.signer.address 
                     ? MESSAGES.CONNECTION_SUCCESS(this.signer.address)
                     : 'Wallet conectada';
-                
-                // Ocultar el texto de desconexión en connectionStatus
-                this.connectionStatusElement.style.display = 'none';
                 
                 console.log(`[DEBUG] Contenido de statusElement:`, {
                     display: this.statusElement.style.display,
