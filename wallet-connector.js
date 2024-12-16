@@ -1,5 +1,3 @@
-// Importamos ethers desde CDN
-// import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
 const { ethers } = window;
 
 // Constantes para mensajes y estados
@@ -237,29 +235,6 @@ class WalletConnector {
         this.requestPending = false;
 
         return null;
-    }
-
-    /**
-     * Inicializa los eventos de cambio de cuenta y red
-     */
-    initListeners() {
-        console.log('Inicializando listeners');
-        window.ethereum.on('accountsChanged', async (accounts) => {
-            console.log('Cuentas cambiadas:', accounts);
-            if (accounts.length === 0) {
-                this.updateStatus(MESSAGES.DISCONNECTION_SUCCESS, WALLET_STATES.DISCONNECTED);
-                this.state = WALLET_STATES.DISCONNECTED;
-                this.updateButton(this.state);
-            } else {
-                this.updateStatus(MESSAGES.CONNECTION_SUCCESS(accounts[0]), WALLET_STATES.CONNECTED);
-                this.updateButton(this.state);
-            }
-        });
-
-        window.ethereum.on('chainChanged', async (chainId) => {
-            console.log('Red cambiada:', chainId);
-            await this.updateNetworkInfo();
-        });
     }
 
     /**
