@@ -21,32 +21,35 @@
             }
         }
 
+        #status {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: none; /* Ocultar por defecto */
+        }
+
         #status[data-state="connected"] {
+            display: block; /* Mostrar solo cuando está conectado */
             color: #16a34a;
-            /* Tailwind's text-green-600 */
             font-weight: 500;
-            /* Tailwind's font-medium */
         }
 
         #status[data-state="error"] {
+            display: block;
             color: #dc2626;
-            /* Tailwind's text-red-600 */
             font-weight: 500;
-            /* Tailwind's font-medium */
         }
 
         #status[data-state="disconnected"] {
+            display: block;
             color: #4b5563;
-            /* Tailwind's text-gray-600 */
             font-weight: 500;
-            /* Tailwind's font-medium */
         }
 
         #status[data-state="pending"] {
+            display: block;
             color: #fbbf24;
-            /* Tailwind's text-yellow-500 */
             font-weight: 500;
-            /* Tailwind's font-medium */
         }
 
         .loading {

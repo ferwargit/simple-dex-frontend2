@@ -100,22 +100,65 @@ class WalletConnector {
      * @param {string} state - Estado de la conexión
      */
     updateUI(state) {
-        console.log(`Actualizando UI a estado: ${state}`);
-        if (this.headerElement && this.footerElement && this.networkElement && this.connectionStatusElement) {
+        console.log(`[DEBUG] updateUI llamado con estado: ${state}`);
+        console.log(`[DEBUG] Elementos disponibles:`, {
+            header: !!this.headerElement,
+            footer: !!this.footerElement,
+            network: !!this.networkElement,
+            connectionStatus: !!this.connectionStatusElement,
+            status: !!this.statusElement
+        });
+
+        if (this.headerElement && this.footerElement && this.networkElement && this.connectionStatusElement && this.statusElement) {
+            console.log(`[DEBUG] Procesando estado: ${state}`);
+            
             if (state === WALLET_STATES.CONNECTED) {
+                console.log('[DEBUG] Configurando estado CONNECTED');
                 this.headerElement.style.display = 'none';
                 this.footerElement.style.display = 'none';
                 this.networkElement.style.display = 'block';
                 this.connectionStatusElement.innerText = 'Wallet conectada';
-                console.log('connectionStatusElement innerText:', this.connectionStatusElement.innerText);
+                
+                // Configuración específica para estado conectado
+                this.statusElement.style.display = 'block';
+                this.statusElement.setAttribute('data-state', state);
+                this.statusElement.innerText = this.signer && this.signer.address 
+                    ? MESSAGES.CONNECTION_SUCCESS(this.signer.address)
+                    : 'Wallet conectada';
+                
+                // Ocultar el texto de desconexión en connectionStatus
+                this.connectionStatusElement.style.display = 'none';
+                
+                console.log(`[DEBUG] Contenido de statusElement:`, {
+                    display: this.statusElement.style.display,
+                    dataState: this.statusElement.getAttribute('data-state'),
+                    innerText: this.statusElement.innerText
+                });
+                
                 this.updateNetworkInfo();
             } else {
+                console.log('[DEBUG] Configurando estado DISCONNECTED');
                 this.headerElement.style.display = 'block';
                 this.footerElement.style.display = 'block';
                 this.networkElement.style.display = 'none';
+                
+                // Mostrar solo un mensaje de desconexión
                 this.connectionStatusElement.innerText = 'Wallet desconectada';
-                console.log('connectionStatusElement innerText:', this.connectionStatusElement.innerText);
+                this.connectionStatusElement.style.display = 'block';
+                
+                // Configuración específica para estado desconectado
+                this.statusElement.style.display = 'none';
+                this.statusElement.setAttribute('data-state', state);
+                this.statusElement.innerText = '';
+                
+                console.log(`[DEBUG] Contenido de statusElement:`, {
+                    display: this.statusElement.style.display,
+                    dataState: this.statusElement.getAttribute('data-state'),
+                    innerText: this.statusElement.innerText
+                });
             }
+        } else {
+            console.error('[ERROR] Algunos elementos no están disponibles para actualizar la UI');
         }
     }
 
@@ -315,17 +358,27 @@ class WalletConnector {
         }
     }
 
-    handleAccountsChanged(accounts) {
-        console.log('Cuentas cambiadas:', accounts);
+    handleAccountsChanged = async (accounts) => {
+        console.log('[DEBUG] handleAccountsChanged llamado', { accounts });
+        
         if (accounts.length === 0) {
-            this.state = WALLET_STATES.DISCONNECTED;
-            this.updateStatus(MESSAGES.DISCONNECTION_SUCCESS, this.state);
+            console.log('[DEBUG] No hay cuentas disponibles');
+            if (this.state !== WALLET_STATES.DISCONNECTED) {
+                console.log('[DEBUG] Cambiando a estado DISCONNECTED');
+                this.state = WALLET_STATES.DISCONNECTED;
+                this.updateStatus(MESSAGES.DISCONNECTION_SUCCESS, this.state);
+                this.updateUI(this.state);
+            } else {
+                console.log('[DEBUG] Ya estaba en estado DISCONNECTED, no se hace nada');
+            }
         } else {
+            console.log('[DEBUG] Cuentas disponibles, cambiando a CONNECTED');
             this.state = WALLET_STATES.CONNECTED;
             this.updateStatus(MESSAGES.CONNECTION_SUCCESS(accounts[0]), this.state);
+            this.updateUI(this.state);
         }
         this.updateButton(this.state);
-    }
+    };
 
     initListeners() {
         console.log('Inicializando listeners');
