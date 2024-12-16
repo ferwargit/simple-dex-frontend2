@@ -1,6 +1,8 @@
 import { Observable } from './observable.js';
 import { Observer } from './observer.js';
 import NetworkManager from './network-manager.js';
+import StateManager from './state-manager.js';
+
 
 
 class WalletConnector {
@@ -11,21 +13,22 @@ class WalletConnector {
         this.footerElement = document.getElementById(footerElementId);
         this.networkElement = document.getElementById(networkElementId);
         this.networkManager = new NetworkManager(this.networkElement);
+        this.stateManager = new StateManager();
+    
         this.connectionStatusElement = document.getElementById(connectionStatusElementId);
         this.provider = null;
         this.signer = null;
-        this.state = 'disconnected';
+    
+        // Establecer el estado inicial
+        this.stateManager.setState('disconnected', 'Estado inicial: desconectado');
         this.requestPending = false;
-
-        // Crear un observable para el estado de la conexión
-        this.stateObservable = new Observable();
-
-        // Suscribir los elementos de la UI al observable
-        this.stateObservable.subscribe(new Observer(this.updateStatus.bind(this)));
-        this.stateObservable.subscribe(new Observer(this.updateButton.bind(this)));
-        this.stateObservable.subscribe(new Observer(this.updateUI.bind(this)));
+    
+        // Suscribir los elementos de la UI al observable de StateManager
+        this.stateManager.subscribe(new Observer(this.updateStatus.bind(this)));
+        this.stateManager.subscribe(new Observer(this.updateButton.bind(this)));
+        this.stateManager.subscribe(new Observer(this.updateUI.bind(this)));
     }
-
+    
     // Métodos de actualización de la UI
     updateStatus(data) {
         const { message, state } = data;
@@ -98,10 +101,16 @@ class WalletConnector {
             await this.provider.send("eth_requestAccounts", []);
             this.signer = await this.provider.getSigner();
             const address = await this.signer.getAddress();
-            this.state = 'connected';
-            this.stateObservable.notify({ message: `Conectado: ${address}`, state: 'connected' });
+
+
+            // this.state = 'connected';
+
+            // this.stateObservable.notify({ message: `Conectado: ${address}`, state: 'connected' });
+            this.stateManager.setState('connected', `Conectado: ${address}`);
+
             this.initListeners();
-            // await this.updateNetworkInfo();
+
+
             await this.networkManager.updateNetworkInfo();
 
             this.requestPending = false;
@@ -116,8 +125,11 @@ class WalletConnector {
     async disconnect() {
         if (this.provider) {
             try {
-                this.state = 'disconnected';
-                this.stateObservable.notify({ message: 'Wallet desconectada', state: 'disconnected' });
+                // this.state = 'disconnected';
+                // this.stateObservable.notify({ message: 'Wallet desconectada', state: 'disconnected' });
+                this.stateManager.setState('disconnected', 'Wallet desconectada');
+
+
                 if (window.ethereum) {
                     window.ethereum.removeListener('accountsChanged', this.handleAccountsChanged);
                     window.ethereum.removeListener('chainChanged', this.handleChainChanged);
@@ -132,7 +144,7 @@ class WalletConnector {
     }
 
     handleButtonClick() {
-        if (this.state === 'connected') {
+        if (this.stateManager.getState() === 'connected') {
             this.disconnect();
         } else {
             this.connect();
@@ -141,13 +153,18 @@ class WalletConnector {
 
     handleAccountsChanged = async (accounts) => {
         if (accounts.length === 0) {
-            this.state = 'disconnected';
-            this.stateObservable.notify({ message: 'Wallet desconectada', state: 'disconnected' });
+            // Usuario desconectó su cuenta desde MetaMask
+            this.stateManager.setState('disconnected', 'Wallet desconectada');
+            this.provider = null;
+            this.signer = null;
         } else {
-            this.state = 'connected';
-            this.stateObservable.notify({ message: `Conectado: ${accounts[0]}`, state: 'connected' });
+            // Usuario cambió de cuenta en MetaMask
+            const address = accounts[0];
+            this.signer = await this.provider.getSigner();
+            this.stateManager.setState('connected', `Conectado: ${address}`);
         }
     };
+    
 
     handleChainChanged = async (chainId) => {
         await this.networkManager.updateNetworkInfo();
@@ -163,7 +180,7 @@ class WalletConnector {
             ? 'El usuario rechazó la conexión'
             : 'Ocurrió un error al conectar la wallet';
         this.stateObservable.notify({ message, state: 'error' });
-        this.state = 'error';
+        this.stateManager.getState() = 'error';
         this.requestPending = false;
     }
 
