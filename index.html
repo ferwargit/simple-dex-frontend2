@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interfaz de conexión para Metamask wallet">
+    <title>Metamask Wallet Connection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Animaciones y estados personalizados */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        #status[data-state="connected"] {
+            color: #16a34a;
+            /* Tailwind's text-green-600 */
+            font-weight: 500;
+            /* Tailwind's font-medium */
+        }
+
+        #status[data-state="error"] {
+            color: #dc2626;
+            /* Tailwind's text-red-600 */
+            font-weight: 500;
+            /* Tailwind's font-medium */
+        }
+
+        #status[data-state="disconnected"] {
+            color: #4b5563;
+            /* Tailwind's text-gray-600 */
+            font-weight: 500;
+            /* Tailwind's font-medium */
+        }
+
+        #status[data-state="pending"] {
+            color: #fbbf24;
+            /* Tailwind's text-yellow-500 */
+            font-weight: 500;
+            /* Tailwind's font-medium */
+        }
+
+        .loading {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Ajustes para el contenedor principal */
+        #walletContainer {
+            max-width: 600px;
+            /* Aumentamos el ancho máximo del contenedor */
+        }
+
+        /* Ajustes para el contenedor de estado */
+        #status {
+            white-space: nowrap;
+            /* Evita que el texto se rompa en líneas nuevas */
+            overflow: hidden;
+            /* Oculta el desbordamiento del texto */
+            text-overflow: ellipsis;
+            /* Muestra puntos suspensivos si el texto es demasiado largo */
+        }
+
+        /* Ajustes para el contenedor de red */
+        #network {
+            margin-top: 8px;
+            color: #16a34a;
+            /* Tailwind's text-green-600 */
+            font-weight: 500;
+            /* Tailwind's font-medium */
+        }
+
+        /* Ajustes para el contenedor de estado de conexión */
+        #connectionStatus {
+            margin-top: 16px;
+            padding: 10px;
+            background-color: #f3f4f6;
+            /* Tailwind's bg-gray-100 */
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            /* Tailwind's font-medium */
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen flex items-center justify-center p-4">
+    <div id="walletContainer" class="w-full p-8 bg-white rounded-xl shadow-lg space-y-6">
+        <!-- Header -->
+        <div id="header" class="text-center space-y-2">
+            <h1 class="text-2xl font-bold text-gray-800">Conecta tu Wallet</h1>
+            <p class="text-gray-600">Conecta tu wallet de Metamask para continuar</p>
+        </div>
+
+        <!-- Botón de conexión/desconexión -->
+        <div class="flex justify-center">
+            <button id="connectButton"
+                class="group relative px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 ease-in-out shadow-md hover:shadow-lg active:scale-95">
+                <span class="flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m0 0v2m0-2h2m-2 0H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Conectar Wallet</span>
+                </span>
+            </button>
+        </div>
+
+        <!-- Estado de la conexión -->
+        <div class="space-y-4">
+            <div id="status" class="p-4 text-center"></div>
+            <div id="network" class="p-4 text-center hidden"></div>
+            <div id="connectionStatus" class="p-4 text-center">Wallet desconectada</div>
+        </div>
+
+        <!-- Footer con información -->
+        <div id="footer" class="text-center text-sm text-gray-500">
+            <p>Asegúrate de tener Metamask instalado en tu navegador</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
+        window.ethers = ethers; // Hacemos ethers disponible globalmente si es necesario
+    </script>
+    <!-- Scripts -->
+    <script type="module" src="./wallet-connector.js"></script>
+</body>
+
+</html>
