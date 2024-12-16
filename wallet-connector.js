@@ -1,7 +1,8 @@
 import { Observable } from './observable.js';
 import { Observer } from './observer.js';
-import NetworkManager from './network-manager.js';
 import StateManager from './state-manager.js';
+import NetworkManager from './network-manager.js';
+// import StateManager from './state-manager.js';
 
 
 
@@ -13,7 +14,10 @@ class WalletConnector {
         this.footerElement = document.getElementById(footerElementId);
         this.networkElement = document.getElementById(networkElementId);
         this.networkManager = new NetworkManager(this.networkElement);
-        this.stateManager = new StateManager();
+    
+        // Crear una instancia de Observable antes de pasarlo a StateManager
+        const observable = new Observable();
+        this.stateManager = new StateManager(observable);
     
         this.connectionStatusElement = document.getElementById(connectionStatusElementId);
         this.provider = null;
@@ -23,7 +27,7 @@ class WalletConnector {
         this.stateManager.setState('disconnected', 'Estado inicial: desconectado');
         this.requestPending = false;
     
-        // Suscribir los elementos de la UI al observable de StateManager
+        // Suscribir observadores
         this.stateManager.subscribe(new Observer(this.updateStatus.bind(this)));
         this.stateManager.subscribe(new Observer(this.updateButton.bind(this)));
         this.stateManager.subscribe(new Observer(this.updateUI.bind(this)));

@@ -1,9 +1,11 @@
 import { Observable } from './observable.js';
 
 class StateManager {
-    constructor() {
+    
+    constructor(observable) {
         this.state = 'disconnected'; // Estado inicial
-        this.observable = new Observable(); // Creación del observable
+        // this.observable = new Observable(); // Creación del observable
+        this.observable = observable; // Recibe el observable externo
     }
 
     // Método para cambiar el estado y notificar
