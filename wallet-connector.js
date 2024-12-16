@@ -1,5 +1,7 @@
 import { Observable } from './observable.js';
 import { Observer } from './observer.js';
+import NetworkManager from './network-manager.js';
+
 
 class WalletConnector {
     constructor(statusElementId, buttonElementId, headerElementId, footerElementId, networkElementId, connectionStatusElementId) {
@@ -8,6 +10,7 @@ class WalletConnector {
         this.headerElement = document.getElementById(headerElementId);
         this.footerElement = document.getElementById(footerElementId);
         this.networkElement = document.getElementById(networkElementId);
+        this.networkManager = new NetworkManager(this.networkElement);
         this.connectionStatusElement = document.getElementById(connectionStatusElementId);
         this.provider = null;
         this.signer = null;
@@ -98,7 +101,9 @@ class WalletConnector {
             this.state = 'connected';
             this.stateObservable.notify({ message: `Conectado: ${address}`, state: 'connected' });
             this.initListeners();
-            await this.updateNetworkInfo();
+            // await this.updateNetworkInfo();
+            await this.networkManager.updateNetworkInfo();
+
             this.requestPending = false;
             return { provider: this.provider, signer: this.signer };
         } catch (error) {
@@ -145,48 +150,8 @@ class WalletConnector {
     };
 
     handleChainChanged = async (chainId) => {
-        await this.updateNetworkInfo();
+        await this.networkManager.updateNetworkInfo();
     };
-
-    async updateNetworkInfo() {
-        try {
-            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-            const chainIdDecimal = parseInt(chainId, 16);
-            let networkName = 'Desconocida';
-            switch (chainIdDecimal) {
-                case 1:
-                    networkName = 'Ethereum Mainnet';
-                    break;
-                case 3:
-                    networkName = 'Ropsten';
-                    break;
-                case 4:
-                    networkName = 'Rinkeby';
-                    break;
-                case 5:
-                    networkName = 'Goerli';
-                    break;
-                case 42:
-                    networkName = 'Kovan';
-                    break;
-                case 137:
-                    networkName = 'Polygon';
-                    break;
-                case 534351:
-                    networkName = 'Scroll Sepolia';
-                    break;
-                case 11155111:
-                    networkName = 'Sepolia';
-                    break;
-                default:
-                    networkName = 'Desconocida';
-            }
-            this.networkElement.innerText = `Red: ${networkName}`;
-        } catch (error) {
-            console.error('Error al obtener la información de la red:', error);
-            this.networkElement.innerText = 'Red: Desconocida';
-        }
-    }
 
     isMetaMaskInstalled() {
         return typeof window.ethereum !== 'undefined';
