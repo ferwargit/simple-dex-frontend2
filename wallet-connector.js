@@ -152,20 +152,31 @@ class WalletConnector {
     }
 
     handleAccountsChanged = async (accounts) => {
-        if (accounts.length === 0) {
-            // Usuario desconectó su cuenta desde MetaMask
-            this.stateManager.setState('disconnected', 'Wallet desconectada');
-            this.provider = null;
-            this.signer = null;
-        } else {
-            // Usuario cambió de cuenta en MetaMask
-            const address = accounts[0];
-            this.signer = await this.provider.getSigner();
-            this.stateManager.setState('connected', `Conectado: ${address}`);
+        try {
+            if (accounts.length === 0) {
+                // Usuario desconectó su cuenta desde MetaMask
+                this.stateManager.setState('disconnected', 'Wallet desconectada');
+                this.provider = null;
+                this.signer = null;
+            } else {
+                // Usuario cambió de cuenta en MetaMask
+                const address = accounts[0];
+                if (this.provider) {
+                    this.signer = await this.provider.getSigner();
+                    this.stateManager.setState('connected', `Conectado: ${address}`);
+                } else {
+                    // Si no hay provider, intentamos reconectar
+                    this.provider = new ethers.BrowserProvider(window.ethereum);
+                    this.signer = await this.provider.getSigner();
+                    this.stateManager.setState('connected', `Conectado: ${address}`);
+                }
+            }
+        } catch (error) {
+            console.error('Error en handleAccountsChanged:', error);
+            this.handleError(error);
         }
     };
     
-
     handleChainChanged = async (chainId) => {
         await this.networkManager.updateNetworkInfo();
     };
@@ -179,8 +190,7 @@ class WalletConnector {
         const message = error.code === 4001
             ? 'El usuario rechazó la conexión'
             : 'Ocurrió un error al conectar la wallet';
-        this.stateObservable.notify({ message, state: 'error' });
-        this.stateManager.getState() = 'error';
+        this.stateManager.setState('error', message);
         this.requestPending = false;
     }
 
