@@ -2,9 +2,7 @@ import { Observable } from './observable.js';
 import { Observer } from './observer.js';
 import StateManager from './state-manager.js';
 import NetworkManager from './network-manager.js';
-// import StateManager from './state-manager.js';
-
-
+import ErrorHandler from './error-handler.js';
 
 class WalletConnector {
     constructor(statusElementId, buttonElementId, headerElementId, footerElementId, networkElementId, connectionStatusElementId) {
@@ -14,25 +12,31 @@ class WalletConnector {
         this.footerElement = document.getElementById(footerElementId);
         this.networkElement = document.getElementById(networkElementId);
         this.networkManager = new NetworkManager(this.networkElement);
-    
+
         // Crear una instancia de Observable antes de pasarlo a StateManager
         const observable = new Observable();
         this.stateManager = new StateManager(observable);
-    
+
         this.connectionStatusElement = document.getElementById(connectionStatusElementId);
         this.provider = null;
         this.signer = null;
-    
+
         // Establecer el estado inicial
         this.stateManager.setState('disconnected', 'Estado inicial: desconectado');
         this.requestPending = false;
-    
+
         // Suscribir observadores
         this.stateManager.subscribe(new Observer(this.updateStatus.bind(this)));
         this.stateManager.subscribe(new Observer(this.updateButton.bind(this)));
         this.stateManager.subscribe(new Observer(this.updateUI.bind(this)));
+
     }
-    
+
+    handleError(error) {
+        this.errorHandler.handle(error);
+        this.requestPending = false;
+    }
+
     // Métodos de actualización de la UI
     updateStatus(data) {
         const { message, state } = data;
@@ -121,7 +125,7 @@ class WalletConnector {
             return { provider: this.provider, signer: this.signer };
         } catch (error) {
             this.requestPending = false;
-            this.handleError(error);
+            this.errorHandler.handle(error);
             return null;
         }
     }
@@ -177,10 +181,10 @@ class WalletConnector {
             }
         } catch (error) {
             console.error('Error en handleAccountsChanged:', error);
-            this.handleError(error);
+            this.errorHandler.handle(error);
         }
     };
-    
+
     handleChainChanged = async (chainId) => {
         await this.networkManager.updateNetworkInfo();
     };
@@ -189,14 +193,14 @@ class WalletConnector {
         return typeof window.ethereum !== 'undefined';
     }
 
-    handleError(error) {
-        console.error('Error en la conexión:', error);
-        const message = error.code === 4001
-            ? 'El usuario rechazó la conexión'
-            : 'Ocurrió un error al conectar la wallet';
-        this.stateManager.setState('error', message);
-        this.requestPending = false;
-    }
+    // handleError(error) {
+    //     console.error('Error en la conexión:', error);
+    //     const message = error.code === 4001
+    //         ? 'El usuario rechazó la conexión'
+    //         : 'Ocurrió un error al conectar la wallet';
+    //     this.stateManager.setState('error', message);
+    //     this.requestPending = false;
+    // }
 
     initListeners() {
         window.ethereum.on('accountsChanged', this.handleAccountsChanged);
