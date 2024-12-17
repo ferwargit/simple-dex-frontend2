@@ -12,24 +12,26 @@ class WalletConnector {
         this.footerElement = document.getElementById(footerElementId);
         this.networkElement = document.getElementById(networkElementId);
         this.networkManager = new NetworkManager(this.networkElement);
-
+    
         // Crear una instancia de Observable antes de pasarlo a StateManager
         const observable = new Observable();
         this.stateManager = new StateManager(observable);
-
+    
+        // Inicializar ErrorHandler con el stateManager
+        this.errorHandler = new ErrorHandler(this.stateManager);
+    
         this.connectionStatusElement = document.getElementById(connectionStatusElementId);
         this.provider = null;
         this.signer = null;
-
+    
         // Establecer el estado inicial
         this.stateManager.setState('disconnected', 'Estado inicial: desconectado');
         this.requestPending = false;
-
+    
         // Suscribir observadores
         this.stateManager.subscribe(new Observer(this.updateStatus.bind(this)));
         this.stateManager.subscribe(new Observer(this.updateButton.bind(this)));
         this.stateManager.subscribe(new Observer(this.updateUI.bind(this)));
-
     }
 
     handleError(error) {
@@ -62,8 +64,24 @@ class WalletConnector {
     }
 
     updateUI(data) {
-        const { state } = data;
-        if (this.headerElement && this.footerElement && this.networkElement && this.connectionStatusElement && this.statusElement) {
+        const { state, message } = data;
+        if (this.headerElement && this.footerElement && this.networkElement && 
+            this.connectionStatusElement && this.statusElement) {
+            
+            // Agregar manejo específico para el estado de error
+            if (state === 'error') {
+                this.headerElement.style.display = 'block';
+                this.footerElement.style.display = 'block';
+                this.networkElement.style.display = 'none';
+                this.connectionStatusElement.innerText = 'Error en la wallet';
+                this.connectionStatusElement.style.display = 'block';
+                this.statusElement.style.display = 'block';
+                this.statusElement.setAttribute('data-state', 'error');
+                this.statusElement.innerText = message;
+                return;
+            }
+    
+            // El resto de tu código updateUI existente
             if (state === 'connected') {
                 this.headerElement.style.display = 'none';
                 this.footerElement.style.display = 'none';
