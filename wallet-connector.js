@@ -193,15 +193,6 @@ class WalletConnector {
         return typeof window.ethereum !== 'undefined';
     }
 
-    // handleError(error) {
-    //     console.error('Error en la conexión:', error);
-    //     const message = error.code === 4001
-    //         ? 'El usuario rechazó la conexión'
-    //         : 'Ocurrió un error al conectar la wallet';
-    //     this.stateManager.setState('error', message);
-    //     this.requestPending = false;
-    // }
-
     initListeners() {
         window.ethereum.on('accountsChanged', this.handleAccountsChanged);
         window.ethereum.on('chainChanged', this.handleChainChanged);
